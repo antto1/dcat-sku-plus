@@ -44,11 +44,12 @@
                             </div>
                         </td>
                         <td>
-                            <span class="btn btn-primary Js_add_attr_name">添加</span>
+                            
                         </td>
                     </tr>
                     </tbody>
                 </table>
+                <span class="btn btn-primary Js_add_attr_name my-2">添加属性</span>
             </div>
 
             <!-- 操作SKU -->
