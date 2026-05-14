@@ -1,15 +1,15 @@
 {
-    "name": "abbotton/dcat-sku-plus",
-    "description": "基于Dcat Admin的SKU扩展增强版",
+    "name": "antto1/dcat-sku-plus-custom",
+    "description": "基于Dcat Admin的SKU扩展增强版（禁用手动输入）",
     "alias": "Dcat Admin SKU扩展增强版",
     "type": "library",
-    "keywords": ["dcat-admin", "extension"],
-    "homepage": "https://github.com/abbotton/dcat-sku-plus",
+    "keywords": ["dcat-admin", "extension", "sku"],
+    "homepage": "https://github.com/antto1/dcat-sku-plus-custom",
     "license": "MIT",
     "authors": [
         {
-            "name": "Abbotton",
-            "email": "uctoo@foxmail.com"
+            "name": "antto1",
+            "email": "no-reply@anttoweb.com"
         }
     ],
     "require": {

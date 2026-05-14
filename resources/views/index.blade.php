@@ -23,33 +23,22 @@
                     <tr>
                         <td>
                             <select class="form-control _normal_ attribute_selector">
-                                <option value="input">手动输入</option>
+                                <option value="">-- 请选择SKU --</option>
                                 @foreach($skuAttributes as $key => &$attribute)
                                     <option value="{{$attribute->attr_type}}" data-idx="{{$key}}">{{$attribute->attr_name}}</option>
                                 @endforeach
                             </select>
-                            <input type="text" class="form-control input_attr_name">
                         </td>
                         <td>
                             <div class="sku_attr_val_wrap">
-                                <div class="sku_attr_val_item">
-                                    <div class="sku_attr_val_input">
-                                        <input type="text" class="form-control">
-                                    </div>
-                                    <span class="btn btn-default Js_remove_attr_val"><i class="feather icon-x"></i></span>
-                                </div>
-                                <div class="sku_attr_val_item Js_add_attr_val" style="padding-left: 10px">
-                                    <span class="btn btn-primary"><i class="feather icon-plus"></i></span>
-                                </div>
                             </div>
                         </td>
                         <td>
-                            
+                            <span class="btn btn-primary Js_add_attr_name">添加</span>
                         </td>
                     </tr>
                     </tbody>
                 </table>
-                <span class="btn btn-primary Js_add_attr_name my-2">添加属性</span>
             </div>
 
             <!-- 操作SKU -->
