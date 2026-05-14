@@ -49,7 +49,7 @@
 #### composer安装
 
 ```shell
-composer require antto/dcat-sku-plus:^1.0.1
+composer require antto/dcat-sku-plus
 ```
 
 #### 应用商店安装
