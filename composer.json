@@ -1,5 +1,5 @@
 {
-    "name": "antto1/dcat-sku-plus",
+    "name": "antto/dcat-sku-plus",
     "description": "基于Dcat Admin的SKU扩展增强版（禁用手动输入）",
     "alias": "Dcat Admin SKU扩展增强版",
     "type": "library",
