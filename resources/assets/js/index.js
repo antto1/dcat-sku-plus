@@ -1,7 +1,9 @@
 (function () {
     function SKU(wrap) {
         this.wrap = $(wrap);
-        this.attrs = {};
+        this.attrs = {};           // 已保存的规格（生成列表用）
+        this.pendingAttrs = {};    // 待保存的规格（用户勾选的）
+        this.savedSkuData = {};    // 保存的 SKU 详细数据
         this.skuAttributes = JSON.parse($('.sku_attributes').val());
         this.uploadUrl = $('.upload_url').val();
         this.deleteUrl = $('.delete_url').val();
@@ -52,6 +54,21 @@
             _this.getSkuAttr()
         });
 
+        // 绑定移除单个SKU条目事件
+        _this.wrap.find('.sku_edit_wrap tbody').on('click', '.Js_remove_sku_item', function () {
+            let tr = $(this).closest('tr');
+            Dcat.confirm('确认要移除此SKU条目吗？', null, function () {
+                tr.remove();
+                _this.processSku();
+            });
+            return false;
+        });
+
+        // 绑定保存按钮事件
+        _this.wrap.find('.Js_save_sku').click(function () {
+            _this.saveAndRegenerate();
+        });
+
         // 绑定input变化事件
         _this.wrap.find('.sku_attr_key_val tbody').on('change', 'input', _this.getSkuAttr.bind(_this));
         _this.wrap.find('.sku_edit_wrap tbody').on('keyup', 'input', _this.processSku.bind(_this));
@@ -76,7 +93,12 @@
                         let method = res.code == 200 ? 'success' : 'error';
                         Dcat[method](res.message);
                         if (res.code == 200) {
+                            let skuImg = that.closest('.sku_img');
                             that.parent('div').remove();
+                            // 删除图片后，显示上传按钮
+                            if (skuImg.find('.img').length === 0) {
+                                skuImg.html('<span class="Js_sku_upload"><i class="feather icon-upload-cloud"></i></span>');
+                            }
                             _this.processSku();
                         }
                     }
@@ -142,6 +164,7 @@
 
             // 生成具体的SKU配置表单
             _this.attrs = old_val.attrs;
+            _this.pendingAttrs = $.extend(true, {}, old_val.attrs); // 同步 pendingAttrs
             _this.SKUForm(old_val.sku, JSON.parse(params));
         } else {
             _this.processSku();
@@ -180,11 +203,168 @@
                 attr[scopeAttrName] = attr_val;
             }
         });
-        if (JSON.stringify(_this.attrs) !== JSON.stringify(attr)) {
-            _this.attrs = attr;
-            let params = _this.wrap.find('.Js_sku_params_input').val();
-            _this.SKUForm(null, JSON.parse(params))
-        }
+        // 只更新 pendingAttrs，不触发 SKUForm 重新生成
+        _this.pendingAttrs = attr;
+    };
+
+    // 保存当前 SKU 数据并重新生成列表
+    SKU.prototype.saveAndRegenerate = function () {
+        let _this = this;
+        
+        // 1. 保存当前 SKU 列表的数据
+        _this.saveCurrentSkuData();
+        
+        // 2. 将 pendingAttrs 同步到 attrs
+        _this.attrs = $.extend(true, {}, _this.pendingAttrs);
+        
+        // 3. 重新生成 SKU 列表
+        let params = _this.wrap.find('.Js_sku_params_input').val();
+        _this.SKUForm(null, JSON.parse(params));
+        
+        // 4. 恢复已保存的数据
+        _this.restoreSkuData();
+        
+        // 5. 提示用户
+        Dcat.success('SKU 规格已保存');
+    };
+
+    // 保存当前 SKU 数据
+    SKU.prototype.saveCurrentSkuData = function () {
+        let _this = this;
+        _this.savedSkuData = {};
+        
+        console.log('[SKU Debug] 保存数据前的 attrs:', _this.attrs);
+        
+        _this.wrap.find('.sku_edit_wrap tbody tr').each(function () {
+            let tr = $(this);
+            let skuKey = [];
+            
+            // 生成规格组合 key，如 "200x45-白色"
+            tr.find('td.attr-name').each(function () {
+                skuKey.push($(this).text().trim());
+            });
+            
+            if (skuKey.length === 0) return;
+            
+            let key = skuKey.join('-');
+            console.log('[SKU Debug] 保存 key:', key);
+            
+            _this.savedSkuData[key] = {
+                pic: [],
+                stock: tr.find('td[data-field="stock"] input').val(),
+                price: tr.find('td[data-field="price"] input').val()
+            };
+            
+            // 保存自定义字段
+            tr.find('td[data-field]').each(function () {
+                let field = $(this).attr('data-field');
+                if (field !== 'pic' && field !== 'stock' && field !== 'price' && field !== 'option') {
+                    _this.savedSkuData[key][field] = $(this).find('input').val();
+                }
+            });
+            
+            // 保存图片数据
+            tr.find('.sku_img .img').each(function () {
+                _this.savedSkuData[key].pic.push({
+                    short_url: $(this).find('.icon-x').data('path'),
+                    full_url: $(this).find('img').attr('src')
+                });
+            });
+        });
+        
+        console.log('[SKU Debug] 保存的 savedSkuData:', _this.savedSkuData);
+    };
+
+    // 恢复 SKU 数据到新列表
+    SKU.prototype.restoreSkuData = function () {
+        let _this = this;
+        let oldKeys = Object.keys(_this.savedSkuData);
+        
+        console.log('[SKU Debug] 恢复数据，oldKeys:', oldKeys);
+        console.log('[SKU Debug] savedSkuData:', _this.savedSkuData);
+        
+        _this.wrap.find('.sku_edit_wrap tbody tr').each(function () {
+            let tr = $(this);
+            let newSkuValues = [];
+            
+            tr.find('td.attr-name').each(function () {
+                newSkuValues.push($(this).text().trim());
+            });
+            
+            if (newSkuValues.length === 0) return;
+            
+            let newKey = newSkuValues.join('-');
+            console.log('[SKU Debug] 新 key:', newKey, '规格值:', newSkuValues);
+            
+            let bestMatch = null;
+            let bestMatchScore = 0;
+            
+            // 查找最佳匹配
+            for (let i = 0; i < oldKeys.length; i++) {
+                let oldKey = oldKeys[i];
+                let oldSkuValues = oldKey.split('-');
+                
+                // 1. 完全匹配（优先级最高）
+                if (oldKey === newKey) {
+                    bestMatch = oldKey;
+                    bestMatchScore = oldSkuValues.length;
+                    console.log('[SKU Debug] 完全匹配:', oldKey);
+                    break;
+                }
+                
+                // 2. 子集匹配：检查旧规格值是否全部包含在新规格中
+                let allContained = true;
+                for (let j = 0; j < oldSkuValues.length; j++) {
+                    if (newSkuValues.indexOf(oldSkuValues[j]) === -1) {
+                        allContained = false;
+                        break;
+                    }
+                }
+                
+                if (allContained) {
+                    // 选择匹配的规格数量最多的（最精确匹配）
+                    if (oldSkuValues.length > bestMatchScore) {
+                        bestMatch = oldKey;
+                        bestMatchScore = oldSkuValues.length;
+                        console.log('[SKU Debug] 子集匹配:', oldKey, '->', newKey);
+                    }
+                }
+            }
+            
+            // 恢复数据
+            if (bestMatch) {
+                let saved = _this.savedSkuData[bestMatch];
+                console.log('[SKU Debug] 恢复数据 from', bestMatch, ':', saved);
+                
+                // 恢复库存、价格
+                tr.find('td[data-field="stock"] input').val(saved.stock || '');
+                tr.find('td[data-field="price"] input').val(saved.price || '');
+                
+                // 恢复自定义字段
+                Object.keys(saved).forEach(function (field) {
+                    if (field !== 'pic' && field !== 'stock' && field !== 'price') {
+                        let input = tr.find('td[data-field="' + field + '"] input');
+                        if (input.length) {
+                            input.val(saved[field]);
+                        }
+                    }
+                });
+                
+                // 恢复图片（只恢复第一张）
+                if (saved.pic && saved.pic.length > 0) {
+                    let firstPic = saved.pic[0];
+                    let html = '<div class="img"><img src="' + firstPic.full_url + '"/><i class="feather icon-x" data-path="' + firstPic.short_url + '"></i></div>';
+                    tr.find('.sku_img').html(html);
+                    // 隐藏上传按钮
+                    tr.find('.Js_sku_upload').hide();
+                }
+            } else {
+                console.log('[SKU Debug] 未匹配到数据 for key:', newKey);
+            }
+        });
+        
+        // 重新计算并提交数据
+        _this.processSku();
     };
 
     // 生成具体的SKU配置表单
@@ -198,11 +378,12 @@
             // 渲染表头
             let thead_html = '<tr>';
             attr_names.forEach(function (attr_name) {
-                thead_html += '<th style="width: 80px">' + attr_name + '</th>'
+                thead_html += '<th>' + attr_name + '</th>'
             });
-            thead_html += '<th data-field="pic" style="width: 102px">图片 </th>';
-            thead_html += '<th data-field="stock">库存 <input type="text" class="form-control"></th>';
-            thead_html += '<th data-field="price">价格 <input type="text" class="form-control"></th>';
+            thead_html += '<th data-field="pic" style="width: 120px">图片 </th>';
+            thead_html += '<th data-field="stock">库存（可批量配置） <input type="text" class="form-control"></th>';
+            thead_html += '<th data-field="price">价格（可批量配置）<input type="text" class="form-control"></th>';
+            thead_html += '<th data-field="option" style="width: 100px">操作</th>';
 
             params.forEach((v) => {
                 thead_html += '<th data-field="' + v['field'] + '">' + v['name'] + '<input  type="text" class="form-control"></th>'
@@ -235,6 +416,7 @@
                 tbody_html += '<td data-field="pic"><div class="sku_img"><span class="Js_sku_upload"><i class="feather icon-upload-cloud"></i></span></div></td>';
                 tbody_html += '<td data-field="stock"><input value="" type="text" class="form-control"></td>';
                 tbody_html += '<td data-field="price"><input value="" type="text" class="form-control"></td>';
+                tbody_html += '<td data-field="option"><span class="btn btn-default Js_remove_sku_item"><i class="feather icon-trash-2"></i></span></td>';
 
                 params.forEach((v) => {
                     tbody_html += '<td data-field="' + v['field'] + '"><input value="' + v['default'] + '" type="text" class="form-control"></td>';
@@ -249,10 +431,12 @@
                     Object.keys(item_sku).forEach(function (field) {
                         if (field == 'pic' && item_sku[field].length > 0) {
                             let html = '';
-                            item_sku[field].forEach(function (v) {
-                                html += '<div class="img"><img src="' + v.full_url + '"/><i class="feather icon-x" data-path="' + v.short_url + '"></i></div>';
-                            });
-                            tr.find('.Js_sku_upload').before(html);
+                            // 只取第一张图片
+                            let firstPic = item_sku[field][0];
+                            html += '<div class="img"><img src="' + firstPic.full_url + '"/><i class="feather icon-x" data-path="' + firstPic.short_url + '"></i></div>';
+                            tr.find('.sku_img').html(html);
+                            // 隐藏上传按钮
+                            tr.find('.Js_sku_upload').hide();
                         } else {
                             let input = tr.find('td[data-field="' + field + '"] input');
                             if (input.length) {
@@ -356,7 +540,12 @@
                 },
                 processData: false, //告诉jQuery不要去处理发送的数据
                 success: function (res) {
-                    obj.before('<div class="img"><img src="' + res.full_url + '"/><i class="feather icon-x" data-path="' + res.short_url + '"></i></div>');
+                    // 限制只能上传一张图片，替换已有图片
+                    let skuImg = obj.closest('.sku_img');
+                    let imgHtml = '<div class="img"><img src="' + res.full_url + '"/><i class="feather icon-x" data-path="' + res.short_url + '"></i></div>';
+                    skuImg.html(imgHtml);
+                    // 隐藏上传按钮（因为已经替换为图片了）
+                    skuImg.find('.Js_sku_upload').hide();
                     _this.processSku();
                 }
             })

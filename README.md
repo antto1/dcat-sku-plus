@@ -52,12 +52,6 @@
 composer require antto/dcat-sku-plus
 ```
 
-#### 应用商店安装
-
-``` 
-等待Dcat Admin 上商店 
-```
-
 ## 使用
 
 ```php

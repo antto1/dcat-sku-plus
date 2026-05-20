@@ -30,8 +30,9 @@ class DcatSkuPlusServiceProvider extends ServiceProvider
             $this->loadViewsFrom($views, 'dcat-sku-plus');
         }
 
-        // 注册 SKU 字段类型
-        Form::extend('sku', SkuField::class);
+        Admin::booting(function () {
+            Form::extend('sku', SkuField::class);
+        });
     }
 
     public function settingForm(): Setting
