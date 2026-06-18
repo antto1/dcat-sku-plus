@@ -7,6 +7,7 @@
         this.skuAttributes = JSON.parse($('.sku_attributes').val());
         this.uploadUrl = $('.upload_url').val();
         this.deleteUrl = $('.delete_url').val();
+        this.csrfToken = $('._csrf_token').val();
         this.attrIndex = 0;
         this.currentAttributeValue = [];
         this.currentSkuId = '';
@@ -87,7 +88,8 @@
                     url: _this.deleteUrl,
                     data: {path: that.data('path')},
                     headers: {
-                        Accept: "application/json"
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": _this.csrfToken
                     },
                     success: function (res) {
                         let method = res.code == 200 ? 'success' : 'error';
@@ -233,8 +235,6 @@
         let _this = this;
         _this.savedSkuData = {};
         
-        console.log('[SKU Debug] 保存数据前的 attrs:', _this.attrs);
-        
         _this.wrap.find('.sku_edit_wrap tbody tr').each(function () {
             let tr = $(this);
             let skuKey = [];
@@ -247,7 +247,6 @@
             if (skuKey.length === 0) return;
             
             let key = skuKey.join('-');
-            console.log('[SKU Debug] 保存 key:', key);
             
             _this.savedSkuData[key] = {
                 pic: [],
@@ -271,17 +270,12 @@
                 });
             });
         });
-        
-        console.log('[SKU Debug] 保存的 savedSkuData:', _this.savedSkuData);
     };
 
     // 恢复 SKU 数据到新列表
     SKU.prototype.restoreSkuData = function () {
         let _this = this;
         let oldKeys = Object.keys(_this.savedSkuData);
-        
-        console.log('[SKU Debug] 恢复数据，oldKeys:', oldKeys);
-        console.log('[SKU Debug] savedSkuData:', _this.savedSkuData);
         
         _this.wrap.find('.sku_edit_wrap tbody tr').each(function () {
             let tr = $(this);
@@ -294,7 +288,6 @@
             if (newSkuValues.length === 0) return;
             
             let newKey = newSkuValues.join('-');
-            console.log('[SKU Debug] 新 key:', newKey, '规格值:', newSkuValues);
             
             let bestMatch = null;
             let bestMatchScore = 0;
@@ -308,7 +301,6 @@
                 if (oldKey === newKey) {
                     bestMatch = oldKey;
                     bestMatchScore = oldSkuValues.length;
-                    console.log('[SKU Debug] 完全匹配:', oldKey);
                     break;
                 }
                 
@@ -326,7 +318,6 @@
                     if (oldSkuValues.length > bestMatchScore) {
                         bestMatch = oldKey;
                         bestMatchScore = oldSkuValues.length;
-                        console.log('[SKU Debug] 子集匹配:', oldKey, '->', newKey);
                     }
                 }
             }
@@ -334,7 +325,6 @@
             // 恢复数据
             if (bestMatch) {
                 let saved = _this.savedSkuData[bestMatch];
-                console.log('[SKU Debug] 恢复数据 from', bestMatch, ':', saved);
                 
                 // 恢复库存、价格
                 tr.find('td[data-field="stock"] input').val(saved.stock || '');
@@ -359,7 +349,7 @@
                     tr.find('.Js_sku_upload').hide();
                 }
             } else {
-                console.log('[SKU Debug] 未匹配到数据 for key:', newKey);
+                // 未匹配到数据
             }
         });
         
@@ -536,7 +526,8 @@
                 data: formData,
                 contentType: false, //告诉jQuery不要去设置Content-Type请求头
                 headers: {
-                    Accept: "application/json"
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": _this.csrfToken
                 },
                 processData: false, //告诉jQuery不要去处理发送的数据
                 success: function (res) {

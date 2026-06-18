@@ -10,7 +10,7 @@ use Dcat\Admin\Layout\Content;
 
 class SkuAttributeController extends AdminController
 {
-    private $attrType = [
+    protected $attrType = [
         'checkbox' => '复选框',
         'radio' => '单选框',
     ];

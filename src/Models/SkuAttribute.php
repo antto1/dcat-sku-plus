@@ -11,6 +11,8 @@ class SkuAttribute extends Model
 
     public $table = 'sku_attribute';
 
+    protected $fillable = ['attr_name', 'attr_type', 'attr_value', 'sort'];
+
     protected $casts = [
         'attr_value' => 'json'
     ];

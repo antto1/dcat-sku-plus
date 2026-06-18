@@ -1,12 +1,9 @@
-# Dcat Admin SKU扩展增强版
+# Dcat Admin SKU 扩展
 
-> 首先感谢前人的肩膀：https://github.com/lty5240/dcat-easy-sku
->
-> 以及前人的前人的肩膀：https://github.com/jade-kun/sku
->
-> 因改动太大，故没有往前面两位大佬的仓库中PR。
-
-### **如果感觉好用，还请给个`Star`鼓励一下，谢谢 :beers: 。**
+> 感谢：
+> https://github.com/lty5240/dcat-easy-sku
+> https://github.com/jade-kun/sku
+> https://github.com/Abbotton/dcat-sku-plus
 
 该插件是 [Dcat Admin](https://learnku.com/docs/dcat-admin/) 的插件，安装方式遵循Dcat Admin官方文档。
 
