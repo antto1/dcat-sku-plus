@@ -2,6 +2,7 @@
 
 namespace Dcat\Admin\Extension\DcatSkuPlus;
 
+use Dcat\Admin\Admin;
 use Dcat\Admin\Extension\DcatSkuPlus\Models\SkuAttribute;
 use Dcat\Admin\Form\Field;
 
@@ -11,6 +12,9 @@ class SkuField extends Field
 
     public function render()
     {
+        Admin::js('vendor/dcat-admin-extensions/antto/dcat-sku-plus/js/index.js');
+        Admin::css('vendor/dcat-admin-extensions/antto/dcat-sku-plus/css/index.css');
+
         $uploadUrl = DcatSkuPlusServiceProvider::setting('sku_plus_img_upload_url') ?: '/atadmin/sku-image-upload';
         $deleteUrl = DcatSkuPlusServiceProvider::setting('sku_plus_img_remove_url') ?: '/atadmin/sku-image-remove';
         $skuAttributes = SkuAttribute::orderBy('sort', 'desc')->get();

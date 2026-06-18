@@ -8,13 +8,6 @@ use Dcat\Admin\Form;
 
 class DcatSkuPlusServiceProvider extends ServiceProvider
 {
-    protected $js = [
-        'js/index.js',
-    ];
-    protected $css = [
-        'css/index.css',
-    ];
-
     protected $menu = [
         [
             'title' => '属性管理',
